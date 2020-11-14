@@ -1,7 +1,8 @@
 #This script process Expedata files and generates basal (or resting) metabolic rate statistics plus two pdf plots with corrected and uncorredted CO2 and O2 traces
 #It assumes you have multiplexed three animals and can be used if baselining occurred in between each animal or in between each round of animals
 
-library(SableBase) #this package is required to open Expedata files in R and is available from https://rdrr.io/github/hawkmoth/sablebase/
+#Load functions required to open Expedata files in R
+library(SableBase) #this package is available from https://rdrr.io/github/hawkmoth/sablebase/
 
 setwd("./Required_functions") #directory where required functions are stored
 sapply(list.files(pattern="[.]R$"), source) #source all required functions
