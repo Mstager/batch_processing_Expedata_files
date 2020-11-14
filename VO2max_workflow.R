@@ -1,7 +1,8 @@
 #This script allows you to process Expedata files to generate VO2max statistics plus two pdf plots with the uncorrected and corrected O2 and CO2 traces
 
 #Load required function from Sable to import Expedata files into R
-library(SableBase)
+library(SableBase) #this package is available from https://rdrr.io/github/hawkmoth/sablebase/
+
 setwd("./Required_functions") #directory where required functions are stored
 sapply(list.files(pattern="[.]R$"), source) #source all required functions
 
