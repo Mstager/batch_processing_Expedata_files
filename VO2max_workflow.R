@@ -7,7 +7,7 @@ setwd("./Required_functions") #directory where required functions are stored
 sapply(list.files(pattern="[.]R$"), source) #source all required functions
 
 #If you used compressed gas that differs in density from ambient air, flow rates recorded by a Sable Massflow Meter need to be corrected. We use an Alicat to measure these flow rates and usually record these at the beginning of a trial. This script performs a linear correction of the flow rate using this value at the time the trial began.
-#Load file with alicat values for each file to be processed, must have corresponding file names. 
+#Load file with alicat values (in ml per minute) for each file to be processed, must have corresponding file names. 
 alicat = read.csv("./Example_Alicat_flow.csv")
 alicat$Filename = paste("c_", alicat$Filename, sep="") #to match fixed filenames
 
