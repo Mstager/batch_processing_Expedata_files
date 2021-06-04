@@ -220,6 +220,70 @@ for (i in n:length(files)) {
 			}
 		}	
 	}
+	if (base_freq == "round"){
+		for (g in 1:(length(marker$text)-1)) {	
+			if (marker$text[g]=="1" & marker$text[g+1]!="2" & marker$text[g+1]!="B" & marker$text[g+1]!="b") {
+			warning("Marker 1 at sample ", marker$sample[g], " is not followed by marker 2 or baseline marker.", immediate.=TRUE)
+			print(marker)
+			plot(file[,O2], type="l", col="blue")
+			abline(v=marker$sample, col="red")
+			text(marker$sample,  max(file[,O2]), marker$text, font=2, col="red")
+			answer1 = as.character(readline("Would you like to add a marker here? y/n"))
+			if (answer1 == "y") {
+				answer2 = as.character(readline("Which marker would you like to add? (e.g. 1, 2, 3, B)"))
+				answer3 = as.integer(readline("Please enter associated sample number:"))
+				marker = rbind(marker[1:g,],c(answer3,NA,NA,NA, answer2),marker[(g+1):length(marker$text),])
+				print(marker)
+				abline(v=marker$sample, col="red")
+			}
+		}
+			if (marker$text[g]=="2" & marker$text[g+1]!="3" & marker$text[g+1]!="B" & marker$text[g+1]!="b") {
+			warning("Marker 2 at sample ", marker$sample[g], " is not followed by marker 3 or baseline marker.", immediate.=TRUE)
+			print(marker)
+			plot(file[,O2], type="l", col="blue")
+			abline(v=marker$sample, col="red")
+			text(marker$sample,  max(file[,O2]), marker$text, font=2, col="red")
+			answer1 = as.character(readline("Would you like to add a marker here? y/n"))
+			if (answer1 == "y") {
+				answer2 = as.character(readline("Which marker would you like to add? (e.g. 1, 2, 3, B)"))
+				answer3 = as.integer(readline("Please enter associated sample number:"))
+				marker = rbind(marker[1:g,],c(answer3,NA,NA,NA, answer2),marker[(g+1):length(marker$text),])
+				print(marker)
+				abline(v=marker$sample, col="red")
+			}
+		}
+			if (marker$text[g]=="3" & marker$text[g+1]!="B" & marker$text[g+1]!="b") {
+			warning("Marker 3 at sample ", marker$sample[g], " is not followed by baseline marker.", immediate.=TRUE)
+			print(marker)
+			plot(file[,O2], type="l", col="blue")
+			abline(v=marker$sample, col="red")
+			text(marker$sample,  max(file[,O2]), marker$text, font=2, col="red")
+			answer1 = as.character(readline("Would you like to add a marker here? y/n"))
+			if (answer1 == "y") {
+				answer2 = as.character(readline("Which marker would you like to add? (e.g. 1, 2, 3, B)"))
+				answer3 = as.integer(readline("Please enter associated sample number:"))
+				marker = rbind(marker[1:g,],c(answer3,NA,NA,NA, answer2),marker[(g+1):length(marker$text),])
+				print(marker)
+				abline(v=marker$sample, col="red")
+			}
+		}
+			if ((marker$text[g]=="B" & marker$text[g+1]!="1") | (marker$text[g]=="b" & marker$text[g+1]!="1")) {
+				warning("Baseline marker at sample ", marker$sample[g], " is not followed by marker 1.", immediate.=TRUE)
+				print(marker)
+				plot(file[,O2], type="l", col="blue")
+				abline(v=marker$sample, col="red")
+				text(marker$sample,  max(file[,O2]), marker$text, font=2, col="red")
+				answer1 = as.character(readline("Would you like to add a marker here? y/n"))
+				if (answer1 == "y") {
+					answer2 = as.character(readline("Which marker would you like to add? (e.g. 1, 2, 3, B)"))
+					answer3 = as.integer(readline("Please enter associated sample number:"))
+					marker = rbind(marker[1:g,],c(answer3,NA,NA,NA, answer2),marker[(g+1):length(marker$text),])
+					print(marker)
+					abline(v=marker$sample, col="red")
+				}
+			}
+		}
+	}	
 	rownames(marker)=1:nrow(marker)
 	
 	#Add additional if statements to add/remove markers here:
@@ -325,6 +389,69 @@ for (i in n:length(files)) {
 				lines(sub[,CO2], col="red") #CO2 shown in red
 				text(Animal_in-O2base_beg[1], 0, id, font=2, col="red") #print ID
 			dev.off()
+			}
+		}
+	}
+	if (base_freq=="round"){ 
+	#if you baselined once per round
+		for (j in 1:num_base) { #then you correct O2 for each round
+			#identify when you switched to animal
+			if (j==1) {Animal_in = marker$sample[marker$text!="b" & marker$text!="B"][j]} #if this is round 1, use the first marker
+			else { #if this isn't round 1, find the first marker after the last basline
+				Animal_in = marker$sample[which(marker$sample==marker$sample[marker$text=="b" | marker$text=="B"][j-1])+1]
+			}	
+			Animal_out = marker$sample[marker$text=="b" | marker$text=="B"][j]  #identify when you switched to baseline
+			if (j<num_base){ #if this isnt the last baseline
+				in_next = marker$sample[which(marker$sample==Animal_out)+1] #identify when you switchd to the next animal
+			}
+			else {in_next=length(file[,O2])} #if it is the last baseline, identify the end of the file
+			if (Animal_in < 300) {tr=4} else {tr = 5} #if initial baseline < 5 mins, assume its 4 mins
+			O2base_beg = id.baseline(X=file[,O2], marker=Animal_in, time_range=tr, period=3) #identify 3 min baseline before
+			O2base_end = id.baseline(X=file[,O2], y=in_next, marker=Animal_out, period=3, beg=FALSE) #identify 3 min base after
+			base_O2 = baseline.value(file[,O2], O2base_beg[1], O2base_beg[2]) #identify O2 value during initial baseline 
+			if (j==1) {beg_O2 = base_O2} #if this is the first baseline, this is the O2 value to use in the correction
+			sub = file[(O2base_beg[1]:O2base_end[2]),] #take subset including only interval from beginning to ending baselines
+			sub$corrected.O2 = correct.baseline(file[,O2], O2base_beg, O2base_end, type="RMR") #baseline correct the O2 in the subsetted period only
+		
+			for (k in 1:num_mark){ #for each marker
+				if (marker$text[k]=="B" | marker$text[k]=="b") {} #if the marker is a baseline, skip it
+				else if ((j==1 && marker$sample[k]<marker$sample[marker$text=="B" | marker$text=="b"][j]) | (j>1 && marker$sample[k]<marker$sample[marker$text=="B" | marker$text=="b"][j] && marker$sample[k]>marker$sample[marker$text=="B" | marker$text=="b"][j-1])){ #otherwise, if this is the first round and the marker comes before the first baseline OR if this is not the first round and the marker comes between the next consecutive baseline
+					id = marker$text[k] #which individual is this in this period?
+					Animal_in = marker$sample[k] #identify when you switched to this individual
+					Animal_out = marker$sample[k+1]  #identify when you switched to the next individual
+					if (Animal_out-Animal_in-2*skip<nadir_length*60) { #if animal wasn't measured for the length of time over which to calculate the nadir (designated above) throw warning
+						warning("Length of time over which to calculate nadir (", nadir_length, " mins) is larger than the length of time over which animal ", id, " was measured between markers ", k, " and ", k+1, ". Nadir will be calculated over period of 5 mins instead.", immediate.=TRUE)
+						nadir_length = 5 #defaults to 5 min nadir length under this scenario
+					}
+					if (id=="1") {flow=Flow1}; if (id=="2") {flow=Flow2}; if (id=="3") {flow=Flow3};
+					sub$VO2 = transform.O2(sub$corrected.O2, sub[,flow], base_O2) #transform O2 based on initial O2 value
+					low = nadir(sub$VO2[(Animal_in-O2base_beg[1]+skip): (Animal_out-O2base_beg[1]-skip)], nadir_length) #find nadir
+					low$sample = Animal_in-O2base_beg[1]+skip #during which sample did the nadir occur?
+					
+					if (id=="1"){  #if this is individual 1
+						if (!any(names(VO2min_1)=="mean")) {VO2min_1 = low} #if this is the first instance of ind 1, then this nadir is the lowest value
+						if (low$mean < VO2min_1$mean) {VO2min_1 = low} #otherwise, check to see if this is the lower than the previous value		
+						output$VO2min_1[i] = VO2min_1$mean #store the lowest value in the output
+					}
+					if (id=="2"){  #if this is individual 2
+						if (!any(names(VO2min_2)=="mean")) {VO2min_2 = low}  #if this is the first instance of ind 2, then this nadir is the lowest value
+						if (low$mean < VO2min_2$mean) {VO2min_2 = low} #otherwise, check to see if this is the lower than the previous value		
+						output$VO2min_2[i] = VO2min_2$mean #store the lowest value in the output
+					}
+					if (id=="3"){  #if this is individual 3
+						if (!any(names(VO2min_3)=="mean")) {VO2min_3 = low} #if this is the first instance of ind 3, then this nadir is the lowest value
+						if (low$mean < VO2min_3$mean) {VO2min_3 = low} #otherwise, check to see if this is the lower than the previous value		
+						output$VO2min_3[i] = VO2min_3$mean #store the lowest value in the output
+					}	
+					#Save a plot for each individual and each round
+					pdf(paste("Plots/", sub("c_RMR_", "", sub(".exp", "", files[i])), "_VO2_Animal", id,"_Round", j,".pdf"))
+						plot(sub$VO2, type="l", col="blue", xlab="Time (s)", ylab="Resting Metabolic Rate (ml O2/min)") #O2 shown in blue
+						abline(v=low$period[1]:low$period[2] + low$sample, col="grey") #lowest region highlighted in gray
+						lines(sub$VO2, col="blue") #replot O2 over this region
+						lines(sub[,CO2], col="red") #CO2 shown in red
+						text(Animal_in-O2base_beg[1], 0, id, font=2, col="red") #print ID
+					dev.off()
+				}
 			}
 		}
 	}
